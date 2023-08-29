@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace FileSystem.Domain.Entities.Files;
 
-namespace FileSystem.Domain.Entities
+public class FileEntity
 {
-    internal class File
-    {
-    }
+    public long Id { get; set; }
+    public string FileName { get; set; }
+    public byte[] FileBytea { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
