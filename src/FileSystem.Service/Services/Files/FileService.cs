@@ -1,36 +1,49 @@
 ﻿using FileSystem.Service.Common.Helpers;
+using FileSystem.Service.Exeptions.Files;
 using FileSystem.Service.Interfaces;
+using FileSystem.Service.ViewModel;
+using HeavyService.Application.Exeptions.Files;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 
 namespace FileSystem.Service.Services.Files;
 
-public class FileService:IFileService
+public class FileService : IFileService
 {
     private readonly string FILES = "files";
     private readonly string ROOTPATH;
-    private readonly string _filesPath;
-    private readonly IWebHostEnvironment _webHostEnvironment;
 
-    public FileService(IWebHostEnvironment webHostEnvironment)
+    public FileService(IWebHostEnvironment env)
     {
-        _webHostEnvironment = webHostEnvironment;
+        ROOTPATH = env.WebRootPath;
     }
 
-    public async Task<List<string>> GetAllAsync()
+    public async Task<List<FileViewModel>> GetAllAsync()
     {
         string _filesPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "files");
 
-        var imagePaths = Directory.GetFiles(_filesPath, "*.*")
-                        .Select(imagePath => imagePath.Replace(_filesPath, "wwwroot"))
-                        .ToList();
+        List<FileViewModel> list = new List<FileViewModel>();
 
-        return await Task.FromResult(imagePaths);
+        var imagePaths = Directory.GetFiles(_filesPath, "*.*")
+                        .Select(imagePath => Path.GetFileName(imagePath));
+       
+
+
+        foreach (var item in imagePaths)
+        { 
+            FileViewModel fileViewModel = new FileViewModel();
+            fileViewModel.fileName = item;
+            list.Add(fileViewModel);
+
+        }
+
+
+        return await Task.FromResult(list);
     }
 
     public async Task<bool> DeleteFileAsync(string subpath)
     {
-        string path = Path.Combine(ROOTPATH, subpath);
+        string path = Path.Combine(ROOTPATH, "files\\"+subpath);
         if (File.Exists(path))
         {
             await Task.Run(() =>
@@ -45,8 +58,18 @@ public class FileService:IFileService
 
     public async Task<string> UploadImageAsync(IFormFile file)
     {
-        string newfileName = MediaHelper.MakeFileName(file.FileName);
-        string subpath = Path.Combine(FILES);
+        if (FILES == null)
+        {
+            throw new FilesNotFoundExeption();
+        }
+
+        if (ROOTPATH == null)
+        {
+            throw new RootpathNotFoundExeption();
+        }
+
+        string newfileName = MediaHelper.MakeFileName(file.Name);
+        string subpath = Path.Combine(FILES,newfileName);
         string path = Path.Combine(ROOTPATH, subpath);
 
         var stream = new FileStream(path, FileMode.Create);
@@ -55,19 +78,5 @@ public class FileService:IFileService
 
         return subpath;
 
-        //if (file == null || file.Length == 0)
-        //    return 0;
-        //else
-        //{
-        //    string fileName = Path.GetFileName(file.FileName);
-        //    string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "files", fileName);
-
-        //    using (var stream = new FileStream(filePath, FileMode.Create))
-        //    {
-        //        await file.CopyToAsync(stream);
-        //    }
-
-        //    return 1;
-        //}
     }
 }

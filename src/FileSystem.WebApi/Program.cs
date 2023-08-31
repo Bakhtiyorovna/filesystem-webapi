@@ -1,6 +1,7 @@
 
 using FileSystem.Service.Interfaces;
 using FileSystem.Service.Services.Files;
+using FileSystem.WebApi.Configuration;
 
 namespace FileSystem.WebApi
 {
@@ -17,6 +18,8 @@ namespace FileSystem.WebApi
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.ConfigureCORSPolicy();
+
             builder.Services.AddScoped<IFileService,FileService>();
 
             var app = builder.Build();
@@ -29,7 +32,7 @@ namespace FileSystem.WebApi
             }
 
             app.UseHttpsRedirection();
-
+            app.UseCors("AllowAll");
             app.UseAuthorization();
 
 
