@@ -8,4 +8,5 @@ public interface IFileService
     public Task<List<FileViewModel>> GetAllAsync();
     public Task<bool> DeleteFileAsync(string subpath);
     public Task<string> UploadImageAsync(IFormFile file);
+    public Task<Stream> GetFileStreamAsync(string fileName);
 }

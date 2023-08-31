@@ -56,8 +56,37 @@ public class FileService : IFileService
         else return false;
     }
 
+    //public async Task<string> UploadImageAsync(IFormFile file)
+    //{
+    //    if (FILES == null)
+    //    {
+    //        throw new FilesNotFoundExeption();
+    //    }
+
+    //    if (ROOTPATH == null)
+    //    {
+    //        throw new RootpathNotFoundExeption();
+    //    }
+
+    //    string newfileName = MediaHelper.MakeFileName(file.Name);
+    //    string subpath = Path.Combine(FILES,newfileName);
+    //    string path = Path.Combine(ROOTPATH, subpath);
+
+    //    var stream = new FileStream(path, FileMode.Create);
+    //    await file.CopyToAsync(stream);
+    //    stream.Close();
+
+    //    return subpath;
+
+    //}
+
     public async Task<string> UploadImageAsync(IFormFile file)
     {
+        if (file == null || file.Length == 0)
+        {
+            throw new ArgumentException("Invalid file");
+        }
+
         if (FILES == null)
         {
             throw new FilesNotFoundExeption();
@@ -68,15 +97,31 @@ public class FileService : IFileService
             throw new RootpathNotFoundExeption();
         }
 
-        string newfileName = MediaHelper.MakeFileName(file.Name);
-        string subpath = Path.Combine(FILES,newfileName);
+        string originalFileName = file.FileName;
+        string fileExtension = Path.GetExtension(originalFileName); // Get the file extension
+
+        string newFileName = MediaHelper.MakeFileName(originalFileName) + fileExtension;
+        string subpath = Path.Combine(FILES, newFileName);
         string path = Path.Combine(ROOTPATH, subpath);
 
-        var stream = new FileStream(path, FileMode.Create);
-        await file.CopyToAsync(stream);
-        stream.Close();
+        using (var stream = new FileStream(path, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
 
         return subpath;
+    }
 
+
+    public async Task<Stream> GetFileStreamAsync(string fileName)
+    {
+        string filePath = Path.Combine(ROOTPATH, FILES, fileName);
+
+        if (File.Exists(filePath))
+        {
+            return new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        }
+
+        return null; // Return null if the file doesn't exist
     }
 }
